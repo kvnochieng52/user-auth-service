@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -86,6 +87,45 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'An error occurred while logging in. Please try again.',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function getUser(Request $request)
+    {
+
+        try {
+            // Check if token is passed in the Authorization header
+            $token = $request->bearerToken();
+
+            if (!$token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authorization token not provided.',
+                ], 401);
+            }
+
+            // Validate token and retrieve the user associated with it
+            $user = Auth::guard('api')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired token.',
+                ], 401);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving user data.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
